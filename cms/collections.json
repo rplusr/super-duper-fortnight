@@ -1,0 +1,70 @@
+{
+  "hero": {
+    "title": "SPRING SUMMER 2024",
+    "subtitle": "NEW COLLECTION",
+    "image": "https://placehold.co/1920x1080/000000/FFFFFF/png?text=Hero+Image",
+    "ctaText": "SHOP NOW",
+    "ctaLink": "/shop"
+  },
+  "featured": [
+    {
+      "id": "1",
+      "name": "Structured Blazer",
+      "price": 895,
+      "image": "https://placehold.co/600x800/1a1a1a/FFFFFF/png?text=Blazer",
+      "category": "Outerwear"
+    },
+    {
+      "id": "2",
+      "name": "Silk Dress",
+      "price": 1250,
+      "image": "https://placehold.co/600x800/2a2a2a/FFFFFF/png?text=Dress",
+      "category": "Dresses"
+    },
+    {
+      "id": "3",
+      "name": "Leather Bag",
+      "price": 650,
+      "image": "https://placehold.co/600x800/3a3a3a/FFFFFF/png?text=Bag",
+      "category": "Accessories"
+    },
+    {
+      "id": "4",
+      "name": "Tailored Trousers",
+      "price": 495,
+      "image": "https://placehold.co/600x800/4a4a4a/FFFFFF/png?text=Trousers",
+      "category": "Bottoms"
+    },
+    {
+      "id": "5",
+      "name": "Cashmere Sweater",
+      "price": 720,
+      "image": "https://placehold.co/600x800/5a5a5a/FFFFFF/png?text=Sweater",
+      "category": "Knitwear"
+    },
+    {
+      "id": "6",
+      "name": "Statement Earrings",
+      "price": 295,
+      "image": "https://placehold.co/600x800/6a6a6a/FFFFFF/png?text=Earrings",
+      "category": "Jewelry"
+    }
+  ],
+  "categories": [
+    {
+      "name": "Women",
+      "image": "https://placehold.co/800x600/1a1a1a/FFFFFF/png?text=Women",
+      "link": "/shop/women"
+    },
+    {
+      "name": "Men",
+      "image": "https://placehold.co/800x600/2a2a2a/FFFFFF/png?text=Men",
+      "link": "/shop/men"
+    },
+    {
+      "name": "Accessories",
+      "image": "https://placehold.co/800x600/3a3a3a/FFFFFF/png?text=Accessories",
+      "link": "/shop/accessories"
+    }
+  ]
+}
