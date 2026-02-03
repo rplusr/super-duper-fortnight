@@ -1,31 +1,53 @@
-# Fashion Boutique - Luxury E-Commerce Site
+# Fashion Boutique - Monorepo
 
-A modern, minimalist fashion e-commerce website inspired by high-end fashion brands like JW Anderson. Built with Next.js 14, featuring a lightweight CMS for content management and Stripe integration for secure payments.
+A modern, full-stack luxury fashion e-commerce platform built as a monorepo with Flutter mobile app, NestJS backend, and Next.js web application.
 
-## Features
+## Architecture
 
-- **Minimalist Design**: Clean, elegant interface inspired by luxury fashion brands
-- **Lightweight CMS**: Easy-to-use admin panel for managing images and content without a database
-- **Stripe Checkout**: Secure payment processing with Stripe
-- **Responsive**: Fully responsive design that works on all devices
-- **Fast Performance**: Built with Next.js 14 App Router for optimal performance
-- **TypeScript**: Type-safe code for better developer experience
+This project is organized as a pnpm monorepo with the following structure:
+
+```
+.
+├── apps/
+│   ├── mobile/          # Flutter mobile app
+│   ├── backend/         # NestJS API server
+│   └── web/             # Next.js web application
+├── packages/
+│   └── shared/          # Shared utilities and types
+├── package.json         # Root package.json
+├── pnpm-workspace.yaml  # Workspace configuration
+└── tsconfig.base.json   # Base TypeScript config
+```
 
 ## Tech Stack
 
+### Mobile App (Flutter)
+- **Framework**: Flutter 3.x
+- **State Management**: Riverpod + flutter_hooks
+- **Networking**: Dio
+- **Navigation**: go_router
+- **Theming**: Material 3 with light/dark mode support
+
+### Backend (NestJS)
+- **Framework**: NestJS 10
+- **Database**: PostgreSQL with Prisma ORM
+- **API Documentation**: Swagger/OpenAPI
+- **Validation**: class-validator + class-transformer
+
+### Web App (Next.js)
 - **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Payment Processing**: Stripe
-- **CMS**: JSON-based file system CMS
-- **Images**: Next.js Image optimization with placeholder images
+- **Payments**: Stripe integration
+- **CMS**: JSON-based file system
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ installed
-- A Stripe account (for payment processing)
+- Node.js 20+
+- pnpm 9+
+- Flutter 3.x (for mobile development)
+- PostgreSQL (for backend)
 
 ### Installation
 
@@ -37,181 +59,157 @@ cd super-duper-fortnight
 
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Set up environment variables:
 ```bash
+# Backend
+cp apps/backend/.env.example apps/backend/.env
+# Edit with your database credentials
+
+# Web
 cp .env.example .env
+# Add your Stripe keys
 ```
 
-4. Add your Stripe keys to `.env`:
-```env
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key
-STRIPE_SECRET_KEY=sk_test_your_secret_key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-5. Run the development server:
+4. Set up the database:
 ```bash
-npm run dev
+cd apps/backend
+pnpm prisma:generate
+pnpm prisma:migrate
 ```
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser
+### Development
 
-## Using the CMS
+```bash
+# Run all apps in development mode
+pnpm dev
 
-The CMS is a lightweight, file-based content management system that doesn't require a database.
+# Run specific apps
+pnpm dev:web      # Next.js web app
+pnpm dev:backend  # NestJS backend
 
-### Accessing the Admin Panel
+# For Flutter mobile app
+cd apps/mobile
+flutter pub get
+flutter run
+```
 
-1. Navigate to `/admin` in your browser
-2. Edit content directly in the interface
-3. Click "Save Changes" to update the site
+### Building
 
-### Managing Content
+```bash
+# Build all apps
+pnpm build
 
-All content is stored in `cms/collections.json`. You can edit:
+# Build specific apps
+pnpm build:web
+pnpm build:backend
+```
 
-- **Hero Section**: Main banner image, title, subtitle
-- **Featured Products**: Product name, price, image, category
-- **Categories**: Category name, image, and links
+### Linting and Formatting
 
-### Updating Images
+```bash
+# Lint all projects
+pnpm lint
 
-To update images, you can:
-1. Use the admin panel at `/admin` and paste new image URLs
-2. Replace placeholder URLs with your own hosted images
-3. Use services like:
-   - Cloudinary
-   - AWS S3
-   - Vercel Blob Storage
-   - Any public image URL
+# Fix lint issues
+pnpm lint:fix
 
-## Stripe Integration
+# Format code
+pnpm format
 
-### Setting Up Stripe
-
-1. Create a [Stripe account](https://stripe.com)
-2. Get your API keys from the Stripe Dashboard
-3. Add them to your `.env` file
-4. Test the checkout with Stripe's test card: `4242 4242 4242 4242`
-
-### How It Works
-
-- Users click "Buy Now with Stripe" on product pages
-- They're redirected to Stripe's secure checkout
-- After payment, they're redirected to the success page
-- Stripe handles all payment processing and security
+# Check formatting
+pnpm format:check
+```
 
 ## Project Structure
 
+### Mobile App (`apps/mobile`)
+
 ```
-├── app/
-│   ├── admin/              # CMS admin panel
-│   ├── api/
-│   │   ├── checkout/       # Stripe checkout API
-│   │   └── cms/            # CMS API endpoints
-│   ├── product/[id]/       # Product detail pages
-│   ├── shop/               # Shop listing page
-│   ├── success/            # Order success page
-│   ├── layout.tsx          # Root layout
-│   ├── page.tsx            # Homepage
-│   └── globals.css         # Global styles
-├── components/             # React components
-│   ├── Navigation.tsx
-│   ├── Footer.tsx
-│   ├── Hero.tsx
-│   ├── FeaturedProducts.tsx
-│   ├── CategoryGrid.tsx
-│   └── CheckoutButton.tsx
-├── lib/
-│   ├── cms.ts              # CMS utilities
-│   └── stripe.ts           # Stripe configuration
-└── cms/
-    └── collections.json    # CMS content data
+lib/
+├── core/
+│   ├── constants/       # App and API constants
+│   ├── extensions/      # Dart extensions
+│   ├── router/          # Navigation configuration
+│   ├── theme/           # Material 3 theming
+│   └── utils/           # Utility functions
+├── features/
+│   ├── auth/            # Authentication feature
+│   ├── home/            # Home screen
+│   └── settings/        # Settings screen
+└── shared/
+    ├── models/          # Shared data models
+    ├── providers/       # Global providers
+    ├── services/        # API and other services
+    └── widgets/         # Reusable widgets
 ```
 
-## Customization
+### Backend (`apps/backend`)
 
-### Changing Colors
-
-Edit `app/globals.css` and Tailwind classes in components to match your brand colors.
-
-### Adding Products
-
-1. Go to `/admin`
-2. Add product details in the Featured Products section
-3. Save changes
-
-Or edit `cms/collections.json` directly:
-```json
-{
-  "id": "7",
-  "name": "Your Product",
-  "price": 999,
-  "image": "https://your-image-url.com/image.jpg",
-  "category": "Category Name"
-}
+```
+src/
+├── common/
+│   ├── decorators/      # Custom decorators
+│   ├── filters/         # Exception filters
+│   ├── guards/          # Auth guards
+│   ├── interceptors/    # Request interceptors
+│   └── pipes/           # Validation pipes
+├── config/              # Configuration
+├── modules/
+│   ├── health/          # Health check endpoint
+│   └── users/           # User management
+└── prisma/              # Prisma service
 ```
 
-### Styling
+### Web App (`apps/web`)
 
-This project uses Tailwind CSS. Modify classes in components to change styling, or update `tailwind.config.ts` for global theme changes.
-
-## Deployment
-
-### Deploy to Vercel
-
-1. Push your code to GitHub
-2. Import project in [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy
-
-### Environment Variables for Production
-
-Make sure to set these in your production environment:
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
-- `STRIPE_SECRET_KEY`
-- `NEXT_PUBLIC_APP_URL` (your production URL)
-
-## Development
-
-```bash
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-
-# Run linter
-npm run lint
+```
+├── app/                 # Next.js App Router pages
+├── components/          # React components
+├── lib/                 # Utilities and configurations
+└── cms/                 # JSON-based CMS data
 ```
 
-## Security Notes
+## API Documentation
 
-- Never commit `.env` file with real API keys
-- Use Stripe test keys for development
-- Enable Stripe webhook signature verification for production
-- Consider adding authentication to the admin panel for production use
+When running the backend in development mode, Swagger documentation is available at:
+```
+http://localhost:3000/api/docs
+```
 
-## Future Enhancements
+## Environment Variables
 
-- Shopping cart functionality
-- User authentication
-- Order history
-- Product search and filtering
-- Image upload functionality
-- Email notifications
-- Inventory management
+### Backend (`apps/backend/.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `NODE_ENV` | Environment (development/production) |
+| `PORT` | Server port (default: 3000) |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `CORS_ORIGIN` | Allowed CORS origin |
+| `JWT_SECRET` | JWT signing secret |
+| `JWT_EXPIRES_IN` | JWT expiration time |
+
+### Web (`.env`)
+
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key |
+| `STRIPE_SECRET_KEY` | Stripe secret key |
+| `NEXT_PUBLIC_APP_URL` | Application URL |
+
+## Scripts
+
+| Script | Description |
+|--------|-------------|
+| `pnpm dev` | Run all apps in development mode |
+| `pnpm build` | Build all apps |
+| `pnpm lint` | Lint all projects |
+| `pnpm format` | Format all code |
+| `pnpm clean` | Clean all build artifacts |
 
 ## License
 
 MIT
-
-## Support
-
-For issues and questions, please open an issue in the repository.
