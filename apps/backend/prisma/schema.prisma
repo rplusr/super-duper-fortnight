@@ -8,12 +8,125 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  password  String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id                String   @id @default(cuid())
+  email             String   @unique
+  name              String?
+  password          String
+  isEmailVerified   Boolean  @default(false) @map("is_email_verified")
+  pushToken         String?  @map("push_token")
+  notificationsEnabled Boolean @default(true) @map("notifications_enabled")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  parcels           Parcel[]
+  refreshTokens     RefreshToken[]
 
   @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Parcel {
+  id              String        @id @default(cuid())
+  userId          String        @map("user_id")
+  trackingNumber  String        @map("tracking_number")
+  carrier         CarrierType
+  carrierName     String?       @map("carrier_name")
+  title           String?
+  description     String?
+  status          ParcelStatus  @default(PENDING)
+  estimatedDelivery DateTime?   @map("estimated_delivery")
+  originCountry   String?       @map("origin_country")
+  destinationCountry String?    @map("destination_country")
+  weight          Float?
+  notifyOnUpdate  Boolean       @default(true) @map("notify_on_update")
+  notifyOnDelivery Boolean      @default(true) @map("notify_on_delivery")
+  isArchived      Boolean       @default(false) @map("is_archived")
+  lastSyncAt      DateTime?     @map("last_sync_at")
+  externalId      String?       @map("external_id")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trackingEvents  TrackingEvent[]
+
+  @@unique([userId, trackingNumber, carrier])
+  @@index([userId])
+  @@index([trackingNumber])
+  @@index([status])
+  @@map("parcels")
+}
+
+model TrackingEvent {
+  id          String   @id @default(cuid())
+  parcelId    String   @map("parcel_id")
+  status      String
+  statusCode  String?  @map("status_code")
+  description String
+  location    String?
+  city        String?
+  country     String?
+  timestamp   DateTime
+  rawData     Json?    @map("raw_data")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  parcel      Parcel   @relation(fields: [parcelId], references: [id], onDelete: Cascade)
+
+  @@index([parcelId])
+  @@index([timestamp])
+  @@map("tracking_events")
+}
+
+enum CarrierType {
+  USPS
+  UPS
+  FEDEX
+  DHL
+  DHL_EXPRESS
+  AMAZON
+  ROYAL_MAIL
+  CHINA_POST
+  YANWEN
+  CAINIAO
+  FOUR_PX           @map("4PX")
+  SF_EXPRESS
+  JAPAN_POST
+  KOREA_POST
+  AUSTRALIA_POST
+  CANADA_POST
+  LA_POSTE
+  DEUTSCHE_POST
+  POSTNL
+  CHRONOPOST
+  GLS
+  DPD
+  HERMES
+  EVRI
+  YODEL
+  TNT
+  ARAMEX
+  OTHER
+}
+
+enum ParcelStatus {
+  PENDING
+  INFO_RECEIVED
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED_ATTEMPT
+  EXCEPTION
+  EXPIRED
+  UNKNOWN
 }

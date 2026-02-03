@@ -1,43 +1,39 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { User } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createUserDto: CreateUserDto) {
-    return this.prisma.user.create({
-      data: createUserDto,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        createdAt: true,
-      },
-    });
-  }
-
-  async findAll() {
+  async findAll(): Promise<Omit<User, 'password'>[]> {
     return this.prisma.user.findMany({
       select: {
         id: true,
         email: true,
         name: true,
+        isEmailVerified: true,
+        pushToken: true,
+        notificationsEnabled: true,
         createdAt: true,
+        updatedAt: true,
       },
-    });
+    }) as unknown as Omit<User, 'password'>[];
   }
 
-  async findOne(id: string) {
+  async findOne(id: string): Promise<Omit<User, 'password'>> {
     const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
         email: true,
         name: true,
+        isEmailVerified: true,
+        pushToken: true,
+        notificationsEnabled: true,
         createdAt: true,
+        updatedAt: true,
       },
     });
 
@@ -45,18 +41,40 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
 
-    return user;
+    return user as unknown as Omit<User, 'password'>;
   }
 
-  async findByEmail(email: string) {
+  async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { email },
     });
   }
 
-  async remove(id: string) {
+  async updateProfile(
+    id: string,
+    data: { name?: string; pushToken?: string; notificationsEnabled?: boolean },
+  ): Promise<Omit<User, 'password'>> {
     await this.findOne(id);
-    return this.prisma.user.delete({
+
+    return this.prisma.user.update({
+      where: { id },
+      data,
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isEmailVerified: true,
+        pushToken: true,
+        notificationsEnabled: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    }) as unknown as Omit<User, 'password'>;
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.findOne(id);
+    await this.prisma.user.delete({
       where: { id },
     });
   }
