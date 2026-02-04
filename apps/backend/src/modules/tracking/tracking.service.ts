@@ -4,6 +4,8 @@ import { CarrierType, ParcelStatus, Parcel } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AftershipClient, TrackingInfo, TrackingCheckpoint } from './clients/aftership.client';
 import { CarrierDetectionService } from './carrier-detection.service';
+import { EventsGateway } from '../events/events.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 export interface TrackingResult {
   success: boolean;
@@ -20,6 +22,8 @@ export class TrackingService {
     private readonly prisma: PrismaService,
     private readonly aftershipClient: AftershipClient,
     private readonly carrierDetectionService: CarrierDetectionService,
+    private readonly eventsGateway: EventsGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async trackParcel(
@@ -62,6 +66,8 @@ export class TrackingService {
       return { success: false, error: 'Parcel not found' };
     }
 
+    const oldStatus = parcel.status;
+
     try {
       const trackingInfo = await this.trackParcel(
         parcel.trackingNumber,
@@ -72,11 +78,13 @@ export class TrackingService {
         return { success: false, error: 'Unable to fetch tracking information' };
       }
 
+      const newStatus = this.mapToParcelStatus(trackingInfo.tag);
+
       // Update parcel status
       const updatedParcel = await this.prisma.parcel.update({
         where: { id: parcelId },
         data: {
-          status: this.mapToParcelStatus(trackingInfo.tag),
+          status: newStatus,
           estimatedDelivery: trackingInfo.expectedDelivery
             ? new Date(trackingInfo.expectedDelivery)
             : null,
@@ -86,10 +94,43 @@ export class TrackingService {
         },
       });
 
-      // Sync tracking events
+      // Sync tracking events and get new events count
+      let newEventsCount = 0;
       if (trackingInfo.checkpoints && trackingInfo.checkpoints.length > 0) {
-        await this.syncTrackingEvents(parcelId, trackingInfo.checkpoints);
+        newEventsCount = await this.syncTrackingEvents(parcelId, trackingInfo.checkpoints);
       }
+
+      // Emit WebSocket events and send push notification if status changed
+      if (oldStatus !== newStatus) {
+        this.eventsGateway.emitStatusChange(
+          parcel.userId,
+          parcelId,
+          oldStatus,
+          newStatus,
+        );
+
+        // Send push notification for status change
+        const parcelTitle = parcel.title || parcel.trackingNumber;
+        this.notificationsService
+          .sendParcelStatusNotification(
+            parcel.userId,
+            parcelId,
+            parcelTitle,
+            oldStatus,
+            newStatus,
+          )
+          .catch((err) => {
+            this.logger.error('Failed to send push notification:', err);
+          });
+      }
+
+      // Emit parcel update event
+      this.eventsGateway.emitParcelUpdate(parcel.userId, parcelId, {
+        status: newStatus,
+        estimatedDelivery: updatedParcel.estimatedDelivery,
+        lastSyncAt: updatedParcel.lastSyncAt,
+        newEventsCount,
+      });
 
       return {
         success: true,
@@ -105,7 +146,13 @@ export class TrackingService {
   private async syncTrackingEvents(
     parcelId: string,
     checkpoints: TrackingCheckpoint[],
-  ): Promise<void> {
+  ): Promise<number> {
+    // Get parcel for userId
+    const parcel = await this.prisma.parcel.findUnique({
+      where: { id: parcelId },
+      select: { userId: true },
+    });
+
     // Get existing events
     const existingEvents = await this.prisma.trackingEvent.findMany({
       where: { parcelId },
@@ -136,7 +183,24 @@ export class TrackingService {
           rawData: checkpoint as object,
         })),
       });
+
+      // Emit new tracking events via WebSocket
+      if (parcel) {
+        for (const checkpoint of newEvents) {
+          this.eventsGateway.emitNewTrackingEvent(parcel.userId, parcelId, {
+            status: checkpoint.subtag || checkpoint.tag,
+            statusCode: checkpoint.tag,
+            description: checkpoint.message,
+            location: checkpoint.location,
+            city: checkpoint.city,
+            country: checkpoint.countryName,
+            timestamp: checkpoint.checkpointTime,
+          });
+        }
+      }
     }
+
+    return newEvents.length;
   }
 
   private mapToParcelStatus(tag: string): ParcelStatus {

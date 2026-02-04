@@ -367,6 +367,48 @@ class Parcel extends Equatable {
 
   String get carrierDisplayName => carrierName ?? carrier.displayName;
 
+  Parcel copyWith({
+    String? id,
+    String? trackingNumber,
+    CarrierType? carrier,
+    String? carrierName,
+    String? title,
+    String? description,
+    ParcelStatus? status,
+    DateTime? estimatedDelivery,
+    String? originCountry,
+    String? destinationCountry,
+    double? weight,
+    bool? notifyOnUpdate,
+    bool? notifyOnDelivery,
+    bool? isArchived,
+    DateTime? lastSyncAt,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<TrackingEvent>? trackingEvents,
+  }) {
+    return Parcel(
+      id: id ?? this.id,
+      trackingNumber: trackingNumber ?? this.trackingNumber,
+      carrier: carrier ?? this.carrier,
+      carrierName: carrierName ?? this.carrierName,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      status: status ?? this.status,
+      estimatedDelivery: estimatedDelivery ?? this.estimatedDelivery,
+      originCountry: originCountry ?? this.originCountry,
+      destinationCountry: destinationCountry ?? this.destinationCountry,
+      weight: weight ?? this.weight,
+      notifyOnUpdate: notifyOnUpdate ?? this.notifyOnUpdate,
+      notifyOnDelivery: notifyOnDelivery ?? this.notifyOnDelivery,
+      isArchived: isArchived ?? this.isArchived,
+      lastSyncAt: lastSyncAt ?? this.lastSyncAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      trackingEvents: trackingEvents ?? this.trackingEvents,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id,

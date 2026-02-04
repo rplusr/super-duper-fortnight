@@ -9,6 +9,7 @@ import '../../features/parcels/presentation/screens/add_parcel_screen.dart';
 import '../../features/parcels/presentation/screens/dashboard_screen.dart';
 import '../../features/parcels/presentation/screens/parcel_detail_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/notifications/presentation/screens/notification_preferences_screen.dart';
 import 'routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -62,6 +63,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.settings,
         name: 'settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: Routes.notifications,
+        name: 'notifications',
+        builder: (context, state) => const NotificationPreferencesScreen(),
       ),
 
       // Parcel routes

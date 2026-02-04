@@ -9,6 +9,9 @@ import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ParcelsModule } from './modules/parcels/parcels.module';
 import { TrackingModule } from './modules/tracking/tracking.module';
+import { EventsModule } from './modules/events/events.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { CacheModule } from './common/cache/cache.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
@@ -24,6 +27,9 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
     AuthModule,
     ParcelsModule,
     TrackingModule,
+    EventsModule,
+    NotificationsModule,
+    CacheModule,
   ],
   controllers: [],
   providers: [

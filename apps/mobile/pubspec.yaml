@@ -48,6 +48,17 @@ dependencies:
   # Share
   share_plus: ^9.0.0
 
+  # Real-time
+  socket_io_client: ^2.0.3+1
+
+  # Push Notifications
+  firebase_core: ^2.31.0
+  firebase_messaging: ^14.9.2
+  flutter_local_notifications: ^17.1.2
+
+  # Connectivity
+  connectivity_plus: ^6.0.3
+
   # Icons
   cupertino_icons: ^1.0.6
 

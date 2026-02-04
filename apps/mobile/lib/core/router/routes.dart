@@ -8,6 +8,7 @@ class Routes {
   // Main routes
   static const String home = '/';
   static const String settings = '/settings';
+  static const String notifications = '/notifications';
 
   // Parcel routes
   static const String addParcel = '/add-parcel';

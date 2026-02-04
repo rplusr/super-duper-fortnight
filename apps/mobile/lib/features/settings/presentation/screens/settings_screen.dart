@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../../core/router/routes.dart';
 import '../../../../shared/providers/theme_provider.dart';
 
 class SettingsScreen extends HookConsumerWidget {
@@ -40,9 +42,7 @@ class SettingsScreen extends HookConsumerWidget {
             leading: const Icon(Icons.notifications_outlined),
             title: const Text('Notifications'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: Navigate to notifications settings
-            },
+            onTap: () => context.push(Routes.notifications),
           ),
           ListTile(
             leading: const Icon(Icons.lock_outline),

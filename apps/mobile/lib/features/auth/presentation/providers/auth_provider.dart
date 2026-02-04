@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/models/user.dart';
+import '../../../../shared/providers/websocket_provider.dart';
 import '../../data/repositories/auth_repository.dart';
 
 enum AuthStatus {
@@ -37,8 +38,9 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepository;
+  final WebSocketController _wsController;
 
-  AuthNotifier(this._authRepository) : super(const AuthState()) {
+  AuthNotifier(this._authRepository, this._wsController) : super(const AuthState()) {
     _checkAuthStatus();
   }
 
@@ -51,6 +53,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
           status: AuthStatus.authenticated,
           user: user,
         );
+        // Connect to WebSocket when authenticated
+        _wsController.connect();
       } else {
         state = const AuthState(status: AuthStatus.unauthenticated);
       }
@@ -72,6 +76,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.authenticated,
         user: user,
       );
+      // Connect to WebSocket after login
+      _wsController.connect();
       return true;
     } on DioException catch (e) {
       final message = _getErrorMessage(e);
@@ -107,6 +113,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         status: AuthStatus.authenticated,
         user: user,
       );
+      // Connect to WebSocket after registration
+      _wsController.connect();
       return true;
     } on DioException catch (e) {
       final message = _getErrorMessage(e);
@@ -125,6 +133,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // Disconnect WebSocket before logout
+    _wsController.disconnect();
     await _authRepository.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);
   }
@@ -163,9 +173,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(ref.watch(authRepositoryProvider));
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final wsController = ref.watch(websocketControllerProvider.notifier);
+  return AuthNotifier(authRepository, wsController);
 });
+
+// Backward compatibility alias
+final authProvider = authNotifierProvider;
 
 final isAuthenticatedProvider = Provider<bool>((ref) {
   return ref.watch(authProvider).status == AuthStatus.authenticated;

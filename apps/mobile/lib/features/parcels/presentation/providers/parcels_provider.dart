@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/parcel.dart';
 import '../../data/models/parcel_stats.dart';
 import '../../data/repositories/parcels_repository.dart';
+import '../../../../shared/providers/websocket_provider.dart';
+import '../../../../shared/services/websocket_service.dart';
 
 // Stats provider
 final parcelStatsProvider = FutureProvider.autoDispose<ParcelStats>((ref) async {
@@ -60,9 +64,60 @@ class ParcelsListState {
 
 class ParcelsListNotifier extends StateNotifier<ParcelsListState> {
   final ParcelsRepository _repository;
+  final WebSocketService _wsService;
+  StreamSubscription? _parcelUpdateSubscription;
+  StreamSubscription? _statusChangeSubscription;
 
-  ParcelsListNotifier(this._repository) : super(const ParcelsListState()) {
+  ParcelsListNotifier(this._repository, this._wsService) : super(const ParcelsListState()) {
     loadParcels();
+    _setupWebSocketListeners();
+  }
+
+  void _setupWebSocketListeners() {
+    _parcelUpdateSubscription = _wsService.parcelUpdates.listen((update) {
+      _handleParcelUpdate(update);
+    });
+
+    _statusChangeSubscription = _wsService.statusChanges.listen((change) {
+      _handleStatusChange(change);
+    });
+  }
+
+  void _handleParcelUpdate(ParcelUpdate update) {
+    final index = state.parcels.indexWhere((p) => p.id == update.parcelId);
+    if (index != -1) {
+      final parcel = state.parcels[index];
+      final updatedParcel = parcel.copyWith(
+        status: update.status != null
+            ? ParcelStatus.values.firstWhere(
+                (s) => s.name == update.status,
+                orElse: () => parcel.status,
+              )
+            : null,
+        estimatedDelivery: update.estimatedDelivery,
+        lastSyncAt: update.lastSyncAt,
+      );
+      updateParcel(updatedParcel);
+    }
+  }
+
+  void _handleStatusChange(StatusChange change) {
+    final index = state.parcels.indexWhere((p) => p.id == change.parcelId);
+    if (index != -1) {
+      final parcel = state.parcels[index];
+      final newStatus = ParcelStatus.values.firstWhere(
+        (s) => s.name == change.newStatus,
+        orElse: () => parcel.status,
+      );
+      updateParcel(parcel.copyWith(status: newStatus));
+    }
+  }
+
+  @override
+  void dispose() {
+    _parcelUpdateSubscription?.cancel();
+    _statusChangeSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> loadParcels({bool refresh = false}) async {
@@ -147,7 +202,9 @@ class ParcelsListNotifier extends StateNotifier<ParcelsListState> {
 
 final parcelsListProvider =
     StateNotifierProvider.autoDispose<ParcelsListNotifier, ParcelsListState>((ref) {
-  return ParcelsListNotifier(ref.watch(parcelsRepositoryProvider));
+  final repository = ref.watch(parcelsRepositoryProvider);
+  final wsService = ref.watch(websocketServiceProvider);
+  return ParcelsListNotifier(repository, wsService);
 });
 
 // Single parcel provider
