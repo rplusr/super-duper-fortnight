@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../shared/providers/theme_provider.dart';
 
 class SettingsScreen extends HookConsumerWidget {
@@ -51,6 +52,19 @@ class SettingsScreen extends HookConsumerWidget {
               // TODO: Navigate to privacy settings
             },
           ),
+          ListTile(
+            leading: Icon(
+              Icons.logout,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: Text(
+              'Log Out',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+              ),
+            ),
+            onTap: () => _showLogoutConfirmation(context, ref),
+          ),
           const Divider(),
           const _SectionHeader(title: 'About'),
           ListTile(
@@ -91,6 +105,32 @@ class SettingsScreen extends HookConsumerWidget {
       case ThemeMode.dark:
         return 'Dark';
     }
+  }
+
+  void _showLogoutConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Log Out'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(authNotifierProvider.notifier).logout();
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Log Out'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showThemePicker(
